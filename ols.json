@@ -1,0 +1,16 @@
+{
+    "collections": [
+        {
+            "name": "core",
+            "path": "I:\\lang\\odin\\core"
+        },
+        {
+            "name": "vandor",
+            "path": "I:\\lang\\odin\\vendor"
+        }
+    ],
+    "enable_document_symbols": true,
+    "enable_semantic_tokens": false,
+    "enable_hover": true,
+    "enable_snippets": true
+}
