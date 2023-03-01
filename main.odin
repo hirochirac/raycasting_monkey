@@ -11,10 +11,12 @@ HEIGHT :: 8 * TILE_SIZE
 TILE_SIZE :: 64
 MAX_WIDTH :: (WIDTH / 2) / TILE_SIZE
 MAX_HEIGHT :: (HEIGHT) / TILE_SIZE
+MAX_DEPTH :: 200
 FSP :: 60
-MAX_RAYS :: 1
 FOV :: ry.PI / 3
 HALF_FOV :: FOV / 2
+CASTED_RAYS :: 260
+STEP_ANGLE :: FOV / CASTED_RAYS
 
 _map: [MAP_SIZE][MAP_SIZE]i32 = {
 	{1, 1, 1, 1, 1, 1, 1, 1},
@@ -66,6 +68,7 @@ main :: proc() {
 
 		draw_map()
 		move_player(&p)
+		draw_raycasting(p)
 		draw_player(p)
 
 	}
@@ -104,12 +107,6 @@ move_player :: proc(p: ^Player) {
 
 	key: ry.KeyboardKey = ry.GetKeyPressed()
 
-	caseY: f32 = math.floor_f32((p^.pos.x / f32((TILE_SIZE * MAP_SIZE))) * f32(MAP_SIZE))
-	caseX: f32 = math.floor_f32((p^.pos.y / f32((TILE_SIZE * MAP_SIZE)) * f32(MAP_SIZE)))
-
-	fmt.println(int(caseY), " ", int(caseX), " ", _map[int(caseY)][int(caseX)])
-
-
 	if key == ry.KeyboardKey.RIGHT {
 		p^.angle += 0.1
 	}
@@ -118,38 +115,60 @@ move_player :: proc(p: ^Player) {
 		p^.angle -= 0.1
 	}
 
-	if (_map[int(caseY)][int(caseX)] == 0) {
-
-		p^.tmp.x = p^.pos.x
-		p^.tmp.y = p^.pos.y
-
-		if key == ry.KeyboardKey.UP {
-			p^.pos.x += p.speed * math.sin_f32(p.angle)
-			p^.pos.y += p.speed * math.cos_f32(p.angle)
-		}
-
-		if key == ry.KeyboardKey.DOWN {
-			p.pos.x -= p.speed * math.sin_f32(p.angle)
-			p.pos.y -= p.speed * math.cos_f32(p.angle)
-		}
-	} else {
-		p.pos = p.tmp
+	if key == ry.KeyboardKey.UP {
+		move(1, p)
 	}
+
+	if key == ry.KeyboardKey.DOWN {
+		move(-1, p)
+	}
+
+}
+
+move :: proc(dir: f32, p: ^Player) {
+
+	tmpx := p^.pos.x + (p^.speed * math.cos_f32(p^.angle) * dir)
+	col := int(math.floor_f32(p^.pos.y / TILE_SIZE))
+	row := int(math.floor_f32(tmpx / TILE_SIZE))
+	if _map[col][row] == 0 {
+		p^.pos.x = tmpx
+	}
+
+	tmpy := p^.pos.y + (p^.speed * math.sin_f32(p^.angle) * dir)
+	col = int(math.floor_f32(tmpy / TILE_SIZE))
+	row = int(math.floor_f32(p^.pos.x / TILE_SIZE))
+	if _map[col][row] == 0 {
+		p^.pos.y = tmpy
+	}
+
 
 }
 
 draw_raycasting :: proc(p: Player) {
 
-	depth: f32 = 0
-	rays: [MAX_RAYS]f32
+	case_x: f32 = 0.0
+	case_y: f32 = 0.0
+	start_angle: f32 = p.angle - HALF_FOV
+	endPos: ry.Vector2 = {}
 
-	for r in 0 ..= MAX_RAYS {
+	for c in 0 ..= CASTED_RAYS {
 
-		loop_depth: for {
+		for depth in 0 ..= MAX_DEPTH {
+			endPos.x = p.pos.x - math.sin_f32(start_angle) * f32(depth)
+			endPos.y = p.pos.y + math.cos_f32(start_angle) * f32(depth)
+
+			case_y = math.floor_f32(endPos.x / TILE_SIZE)
+			case_x = math.floor_f32((endPos.y / TILE_SIZE))
+
+			ry.DrawLineV(p.pos, endPos, ry.Color{255, 255, 0, 255})
+
+			if _map[int(case_y)][int(case_x)] == 1 {
+				break
+			}
 
 
 		}
-
+		start_angle += STEP_ANGLE
 	}
 }
 
@@ -157,13 +176,13 @@ draw_player :: proc(p: Player) {
 	ry.DrawCircle(i32(p.pos.x), i32(p.pos.y), p.r, p.color)
 	ry.DrawLineV(
 		p.pos,
-		ry.Vector2{p.pos.x + math.sin_f32(p.angle) * 20, p.pos.y + math.cos_f32(p.angle) * 20},
+		ry.Vector2{p.pos.x - math.sin_f32(p.angle) * 20, p.pos.y + math.cos_f32(p.angle) * 20},
 		ry.RED,
 	)
 	ry.DrawLineV(
 		p.pos,
 		ry.Vector2{
-			p.pos.x + math.sin_f32(p.angle + HALF_FOV) * 20,
+			p.pos.x - math.sin_f32(p.angle + HALF_FOV) * 20,
 			p.pos.y + math.cos_f32(p.angle + HALF_FOV) * 20,
 		},
 		ry.RED,
@@ -171,7 +190,7 @@ draw_player :: proc(p: Player) {
 	ry.DrawLineV(
 		p.pos,
 		ry.Vector2{
-			p.pos.x + math.sin_f32(p.angle - HALF_FOV) * 20,
+			p.pos.x - math.sin_f32(p.angle - HALF_FOV) * 20,
 			p.pos.y + math.cos_f32(p.angle - HALF_FOV) * 20,
 		},
 		ry.RED,
