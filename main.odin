@@ -127,14 +127,14 @@ move_player :: proc(p: ^Player) {
 
 move :: proc(dir: f32, p: ^Player) {
 
-	tmpx := p^.pos.x + (p^.speed * math.cos_f32(p^.angle) * dir)
+	tmpx := p^.pos.x - (p^.speed * math.sin_f32(p^.angle) * dir)
 	col := int(math.floor_f32(p^.pos.y / TILE_SIZE))
 	row := int(math.floor_f32(tmpx / TILE_SIZE))
 	if _map[col][row] == 0 {
 		p^.pos.x = tmpx
 	}
 
-	tmpy := p^.pos.y + (p^.speed * math.sin_f32(p^.angle) * dir)
+	tmpy := p^.pos.y + (p^.speed * math.cos_f32(p^.angle) * dir)
 	col = int(math.floor_f32(tmpy / TILE_SIZE))
 	row = int(math.floor_f32(p^.pos.x / TILE_SIZE))
 	if _map[col][row] == 0 {
@@ -162,7 +162,14 @@ draw_raycasting :: proc(p: Player) {
 
 			ry.DrawLineV(p.pos, endPos, ry.Color{255, 255, 0, 255})
 
-			if _map[int(case_y)][int(case_x)] == 1 {
+			if _map[int(case_x)][int(case_y)] == 1 {
+				ry.DrawRectangle(
+					i32(case_y) * TILE_SIZE,
+					i32(case_x) * TILE_SIZE,
+					TILE_SIZE - 1,
+					TILE_SIZE - 1,
+					ry.Color{0, 0, 255, 255},
+				)
 				break
 			}
 
