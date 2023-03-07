@@ -11,12 +11,13 @@ HEIGHT :: 8 * TILE_SIZE
 TILE_SIZE :: 64
 MAX_WIDTH :: (WIDTH / 2) / TILE_SIZE
 MAX_HEIGHT :: (HEIGHT) / TILE_SIZE
-MAX_DEPTH :: 200
+MAX_DEPTH :: 500
 FSP :: 60
 FOV :: ry.PI / 3
 HALF_FOV :: FOV / 2
 CASTED_RAYS :: 260
 STEP_ANGLE :: FOV / CASTED_RAYS
+SCALE :: WIDTH / CASTED_RAYS
 
 _map: [MAP_SIZE][MAP_SIZE]i32 = {
 	{1, 1, 1, 1, 1, 1, 1, 1},
@@ -65,6 +66,9 @@ main :: proc() {
 		defer ry.EndDrawing()
 
 		ry.ClearBackground(ry.RAYWHITE)
+
+		ry.DrawRectangle(480, HEIGHT / 2, HEIGHT, HEIGHT, ry.Color{100, 100, 100, 255})
+		ry.DrawRectangle(480, HEIGHT / 2, HEIGHT, HEIGHT, ry.DARKGRAY)
 
 		draw_map()
 		move_player(&p)
@@ -160,7 +164,7 @@ draw_raycasting :: proc(p: Player) {
 			case_y = math.floor_f32(endPos.x / TILE_SIZE)
 			case_x = math.floor_f32((endPos.y / TILE_SIZE))
 
-			ry.DrawLineV(p.pos, endPos, ry.Color{255, 255, 0, 255})
+			//ry.DrawLineV(p.pos, endPos, ry.Color{255, 255, 0, 255})
 
 			if _map[int(case_x)][int(case_y)] == 1 {
 				ry.DrawRectangle(
@@ -170,6 +174,19 @@ draw_raycasting :: proc(p: Player) {
 					TILE_SIZE - 1,
 					ry.Color{0, 0, 255, 255},
 				)
+
+				ry.DrawLineV(p.pos, endPos, ry.Color{255, 255, 0, 255})
+
+				wall_height := 21000 / (f32(depth) + 0.0001)
+
+				ry.DrawRectangle(
+					HEIGHT + i32(c) * SCALE,
+					HEIGHT / 2.0 - i32(wall_height) / 2.0,
+					SCALE,
+					i32(math.floor_f32(wall_height)),
+					ry.Color{255, 255, 255, 255},
+				)
+
 				break
 			}
 
