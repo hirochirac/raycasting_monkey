@@ -164,8 +164,6 @@ draw_raycasting :: proc(p: Player) {
 			case_y = math.floor_f32(endPos.x / TILE_SIZE)
 			case_x = math.floor_f32((endPos.y / TILE_SIZE))
 
-			//ry.DrawLineV(p.pos, endPos, ry.Color{255, 255, 0, 255})
-
 			if _map[int(case_x)][int(case_y)] == 1 {
 				ry.DrawRectangle(
 					i32(case_y) * TILE_SIZE,
@@ -177,14 +175,19 @@ draw_raycasting :: proc(p: Player) {
 
 				ry.DrawLineV(p.pos, endPos, ry.Color{255, 255, 0, 255})
 
-				wall_height := 21000 / (f32(depth) + 0.0001)
+				fish_eyes := f32(depth) * math.cos_f32(p.angle - start_angle)
+
+				wall_height := 21000 / (fish_eyes + 0.0001)
+
+				color := u8(255 / 1 + f32(depth * depth) * 0.0001)
+
 
 				ry.DrawRectangle(
 					HEIGHT + i32(c) * SCALE,
 					HEIGHT / 2.0 - i32(wall_height) / 2.0,
 					SCALE,
 					i32(math.floor_f32(wall_height)),
-					ry.Color{255, 255, 255, 255},
+					ry.Color{color, color, color, 255},
 				)
 
 				break
